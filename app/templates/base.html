@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Painel de auditoria{% endblock %}</title>
+<style>
+  :root { --bg:#f7f8fa; --fg:#1b2430; --card:#fff; --line:#d5dbe3; --accent:#0b6b5c; --muted:#5b6675; --err:#b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12171d; --fg:#e6ebf1; --card:#1a212a; --line:#2c3643; --accent:#4cc3ac; --muted:#9aa7b6; --err:#ff7b72; }
+  }
+  body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  header { display:flex; justify-content:space-between; align-items:center; padding:12px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+  header nav a { margin-right:16px; color:var(--accent); text-decoration:none; font-weight:600; }
+  main { max-width:1000px; margin:0 auto; padding:24px 16px; }
+  h1 { font-size:22px; margin:0 0 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:6px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:var(--muted); font-weight:600; }
+  form.filters { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+  label { display:flex; flex-direction:column; font-size:13px; color:var(--muted); gap:4px; }
+  input, select { padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:transparent; color:inherit; font:inherit; }
+  button, .btn { padding:7px 14px; border-radius:6px; border:1px solid var(--accent); background:var(--accent); color:#fff; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
+  button.link { background:transparent; color:var(--accent); }
+  :focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  .flash { color:var(--err); font-weight:600; margin-bottom:12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  .muted { color:var(--muted); }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <nav>
+    <a href="{{ url_for('dashboard.index') }}">Sessões</a>
+    {% if session.get('role') == 'admin' %}<a href="{{ url_for('dashboard.access_log') }}">Log de acessos</a>{% endif %}
+  </nav>
+  {% if session.get('username') %}
+  <form method="post" action="{{ url_for('dashboard.logout') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <span class="muted">{{ session['username'] }} ({{ session['role'] }})</span>
+    <button class="link" type="submit">Sair</button>
+  </form>
+  {% endif %}
+</header>
+<main>
+  {% for m in get_flashed_messages() %}<div class="flash" role="alert">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

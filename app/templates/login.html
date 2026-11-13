@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Entrar{% endblock %}
+{% block content %}
+<h1>Acesso ao painel</h1>
+<form method="post" class="card" style="max-width:360px">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label>Usuário <input name="username" autocomplete="username" required autofocus></label>
+  <label style="margin-top:12px">Senha <input type="password" name="password" autocomplete="current-password" required></label>
+  <p><button type="submit">Entrar</button></p>
+  <p class="muted">Acesso restrito a auditores autorizados. Os acessos são registrados.</p>
+</form>
+{% endblock %}

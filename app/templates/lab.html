@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratório de auditoria de teclado</title>
+<style>
+  :root { --bg:#f7f8fa; --fg:#1b2430; --card:#fff; --line:#d5dbe3; --accent:#0b6b5c; --rec:#b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12171d; --fg:#e6ebf1; --card:#1a212a; --line:#2c3643; --accent:#4cc3ac; --rec:#ff7b72; }
+  }
+  body { margin:0; font:16px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  main { max-width:640px; margin:0 auto; padding:24px 16px; }
+  fieldset { background:var(--card); border:1px solid var(--line); border-radius:8px; margin:0 0 16px; padding:16px; }
+  label { display:block; margin:8px 0 4px; font-weight:600; }
+  input, textarea { width:100%; box-sizing:border-box; padding:8px; border:1px solid var(--line); border-radius:6px; background:transparent; color:inherit; font:inherit; }
+  input[type=checkbox] { width:auto; }
+  button { padding:8px 16px; border-radius:6px; border:1px solid var(--accent); background:var(--accent); color:#fff; font:inherit; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--accent); }
+  :focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  #indicator { display:none; align-items:center; gap:8px; padding:8px 12px; border:2px solid var(--rec); border-radius:6px; color:var(--rec); font-weight:700; margin-bottom:16px; }
+  #indicator.on { display:flex; }
+  #indicator::before { content:""; width:10px; height:10px; border-radius:50%; background:var(--rec); }
+  .note { font-size:14px; opacity:.8; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Laboratório de auditoria de teclado</h1>
+
+  <div id="indicator" role="status" aria-live="polite">Monitoramento ativo: apenas metadados desta página</div>
+
+  <fieldset id="consent-box">
+    <legend>Consentimento</legend>
+    <p>Esta sessão registra somente <strong>categorias de tecla</strong> (caractere, especial, navegação), o campo usado e o horário. O texto digitado <strong>não</strong> é gravado. Campos de senha são ignorados.</p>
+    <label><input type="checkbox" id="consent"> Entendo e autorizo esta sessão de teste.</label>
+    <p><button id="start">Iniciar sessão</button></p>
+  </fieldset>
+
+  <fieldset id="lab" disabled>
+    <legend>Campos de demonstração</legend>
+    <label for="name">Nome</label>
+    <input id="name" data-audit-context="name" autocomplete="off">
+    <label for="notes">Observações</label>
+    <textarea id="notes" data-audit-context="notes" rows="3"></textarea>
+    <label for="password">Senha (sensível, nunca registrada)</label>
+    <input id="password" type="password" data-audit-context="password" data-sensitive="true" autocomplete="off">
+    <p><button id="stop" class="secondary">Encerrar sessão</button></p>
+  </fieldset>
+  <p class="note" id="status"></p>
+</main>
+
+<script>
+(() => {
+  let sessionId = null, buffer = [], timer = null;
+  const $ = (id) => document.getElementById(id);
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) });
+    return r.json();
+  }
+
+  // Escuta apenas elementos DESTA página marcados com data-audit-context.
+  function onKey(type) {
+    return (e) => {
+      if (!sessionId) return;
+      const el = e.target.closest("[data-audit-context]");
+      if (!el) return;
+      const sensitive = el.dataset.sensitive === "true" || el.type === "password";
+      if (sensitive) return;  // campos sensíveis nem saem do navegador
+      buffer.push({ event_type: type, key: e.key, context: el.dataset.auditContext });
+      if (buffer.length >= 20) flush();
+      else { clearTimeout(timer); timer = setTimeout(flush, 1500); }
+    };
+  }
+
+  async function flush() {
+    if (!sessionId || !buffer.length) return;
+    const events = buffer; buffer = [];
+    await post(`/api/session/${sessionId}/events`, { events });
+  }
+
+  document.addEventListener("keydown", onKey("keydown"));
+  document.addEventListener("keyup", onKey("keyup"));
+
+  $("start").onclick = async () => {
+    const res = await post("/api/session/start", { consent: $("consent").checked });
+    if (res.error) { $("status").textContent = res.error; return; }
+    sessionId = res.session_id;
+    $("lab").disabled = false; $("indicator").classList.add("on");
+    $("consent-box").style.display = "none";
+    $("status").textContent = "Sessão iniciada.";
+  };
+
+  $("stop").onclick = async () => {
+    await flush();
+    await post(`/api/session/${sessionId}/finish`, {});
+    sessionId = null; $("lab").disabled = true; $("indicator").classList.remove("on");
+    $("status").textContent = "Sessão encerrada. A captura foi interrompida.";
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<form method="get" class="filters">
+  <label>De <input type="date" name="date_from" value="{{ f.date_from or '' }}"></label>
+  <label>Até <input type="date" name="date_to" value="{{ f.date_to or '' }}"></label>
+  <label>Categoria
+    <select name="category">
+      <option value="">Todas</option>
+      {% for c in categories %}<option value="{{ c }}" {{ 'selected' if f.category == c }}>{{ c }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Contexto <input name="context" value="{{ f.context }}" maxlength="64" placeholder="ex.: name"></label>
+  <button type="submit">Filtrar</button>
+  <a href="{{ request.path }}">Limpar</a>
+</form>

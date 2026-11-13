@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Log de acessos ao painel</h1>
+<div class="card"><table>
+  <tr><th>Horário (UTC)</th><th>Usuário</th><th>Ação</th><th>Detalhe</th></tr>
+  {% for r in rows %}<tr><td>{{ r.timestamp }}</td><td>{{ r.username }}</td><td>{{ r.action }}</td><td>{{ r.detail }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">Sem registros.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

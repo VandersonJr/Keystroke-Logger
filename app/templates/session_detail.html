@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Sessão {{ sess.id }}{% endblock %}
+{% block content %}
+<h1>Sessão {{ sess.id }}</h1>
+<p class="muted">Token {{ sess.session_token }} · início {{ sess.started_at }} · fim {{ sess.finished_at or 'em andamento' }}</p>
+<div class="card">{% include "_filters.html" %}</div>
+{% include "_totals.html" %}
+<div class="card">
+  <p><a class="btn" href="{{ url_for('dashboard.export_csv', session_id=sess.id, **args) }}">Exportar CSV</a>
+     <a href="{{ url_for('dashboard.index') }}">← Todas as sessões</a></p>
+  <table>
+    <tr><th>#</th><th>Tipo</th><th>Categoria</th><th>Contexto</th><th>Horário (UTC)</th></tr>
+    {% for e in events %}
+    <tr><td>{{ e.id }}</td><td>{{ e.event_type }}</td><td>{{ e.key_category }}</td><td>{{ e.context }}</td><td>{{ e.timestamp }}</td></tr>
+    {% else %}<tr><td colspan="5" class="muted">Nenhum evento.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

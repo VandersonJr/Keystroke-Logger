@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Sessões</h1>
+<div class="card">{% include "_filters.html" %}</div>
+{% include "_totals.html" %}
+<div class="card">
+  <p><a class="btn" href="{{ url_for('dashboard.export_csv', **args) }}">Exportar CSV</a></p>
+  <table>
+    <tr><th>ID</th><th>Token</th><th>Início</th><th>Fim</th><th>Eventos</th></tr>
+    {% for s in sessions %}
+    <tr>
+      <td><a href="{{ url_for('dashboard.session_detail', sid=s.id, **args) }}">{{ s.id }}</a></td>
+      <td>{{ s.session_token }}</td><td>{{ s.started_at }}</td><td>{{ s.finished_at or 'em andamento' }}</td><td>{{ s.total }}</td>
+    </tr>
+    {% else %}<tr><td colspan="5" class="muted">Nenhuma sessão encontrada.</td></tr>{% endfor %}
+  </table>
+  <p>{% if page > 1 %}<a href="?{{ (args.to_dict() | dictsort | map('join','=') | join('&')) }}&page={{ page-1 }}">« Anterior</a>{% endif %}
+     {% if sessions|length == 100 %}<a href="?{{ (args.to_dict() | dictsort | map('join','=') | join('&')) }}&page={{ page+1 }}">Próxima »</a>{% endif %}</p>
+</div>
+{% endblock %}
